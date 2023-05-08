@@ -155,7 +155,14 @@ def human_computer(game, state):
             print(f"The algorithm chooses {move}.")
 
         game.display(state)
-
+    print("\nGame over.")
+    if state.utility == 1:
+        print("X wins!")
+    elif state.utility == -1:
+        print("O wins!")
+    else:
+        print("It's a tie!")
+        
 def computer_computer(game, state):
     while not game.terminal_test(state):
         player = state.to_move
@@ -168,6 +175,13 @@ def computer_computer(game, state):
 
         state = game.result(state, move)
         game.display(state)
+    print("\nGame over.")
+    if state.utility == 1:
+        print("X wins!")
+    elif state.utility == -1:
+        print("O wins!")
+    else:
+        print("It's a tie!")
 
 def human_human(game, state):
     while not game.terminal_test(state):
@@ -180,6 +194,13 @@ def human_human(game, state):
         else:
             print("Invalid input!\n")
         game.display(state)
+    print("\nGame over.")
+    if state.utility == 1:
+        print("X wins!")
+    elif state.utility == -1:
+        print("O wins!")
+    else:
+        print("It's a tie!")
 
 
 if __name__ == "__main__":
@@ -200,10 +221,10 @@ if __name__ == "__main__":
     else:
         print("Invalid input")    
 
-    print("\nGame over.")
-    if state.utility == 1:
-        print("X wins!")
-    elif state.utility == -1:
-        print("O wins!")
-    else:
-        print("It's a tie!")
+    #print("\nGame over.")
+    #if state.utility == 1:
+    #    print("X wins!")
+    #elif state.utility == -1:
+    #    print("O wins!")
+    #else:
+    #    print("It's a tie!")

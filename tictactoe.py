@@ -1,4 +1,49 @@
 from games import *
+import time
+
+def alpha_beta_IDS(state, game, d=10, eval_fn=None):
+    start = time.time()
+    player = game.to_move(state)
+
+    def alphabeta(state,alpha, beta, depth):
+
+        def max_value(state, alpha, beta, depth):
+            if game.terminal_test(state):
+                return game.utility(state, player)
+            v = -np.inf
+            for a in game.actions(state):
+                v = max(v, min_value(game.result(state, a), alpha, beta, depth - 1))
+                if v >= beta:
+                    return v
+                alpha = max(alpha, v)
+            return v
+
+        def min_value(state, alpha, beta, depth):
+            if game.terminal_test(state):
+                return game.utility(state, player)
+            v = np.inf
+            for a in game.actions(state):
+                v = min(v, max_value(game.result(state, a), alpha, beta, depth - 1))
+                if v <= alpha:
+                    return v
+                beta = min(beta, v)
+            return v
+
+        if time.time() - start > 10 or 0 >= depth: return eval_fn(state)
+        return max_value(state, alpha, beta, depth) if state.to_move == 'X' else min_value(state, alpha, beta, depth)
+
+    best_action = None
+    for depth in range(1, d):
+        if time.time() - start > 10: break
+        eval_fn = eval_fn or (lambda state: game.utility(state, player))
+        best_score = -np.inf
+        beta = np.inf
+        for a in game.actions(state):
+            v = alphabeta(game.result(state, a), best_score, beta, depth)
+            if v > best_score:
+                best_score = v
+                best_action = a
+    return best_action
 
 class NxNTicTacToe(Game):
     """Play TicTacToe on an h x v board, with Max (first player) playing 'X'.
@@ -69,22 +114,87 @@ class NxNTicTacToe(Game):
         n -= 1  # Because we counted move itself twice
         return n >= self.k
 
+def check_input(user_input, board_size):
+    # Strip parentheses from the input
+    user_input = user_input.strip("()")
 
-if __name__ == "__main__":
-    user_input=input("Please enter the size of your board. ex: 3x3, 4x4, 5x5 etc.\n")
-    board_size=int(user_input)
-    game = NxNTicTacToe(board_size,board_size,board_size)
-    state = game.initial
+    # Split the input into a and b strings
+    a_str, b_str = user_input.split(",")
 
-    print("\nLet's play TicTacToe!\n")
-    game.display(state)
+    # Check if a and b are digits
+    if not a_str.isdigit() or not b_str.isdigit():
+        return False
 
+    # Convert the a and b strings to integers
+    a, b = int(a_str), int(b_str)
+
+    # Check if either a or b is greater than the board size
+    if a > board_size or b > board_size:
+        return False
+
+    # Return the a and b as a tuple
+    return True
+
+def human_computer(game, state):
+    while not game.terminal_test(state):
+        player = state.to_move
+        print(f"\n{player}'s turn.")
+
+        if player == 'X':  # User's turn
+            move_input = input("Enter your move as (x, y): ")
+            if(check_input(move_input,board_size)):
+                move = eval(move_input)
+                state = game.result(state, move)
+            else:
+                print("Invalid input!\n")
+        else:  # Algorithm's turn
+            depth = 5  # Set the search depth
+            eval_fn = None  # Use the default evaluation function
+            move = alpha_beta_IDS(state, game, depth, eval_fn)
+            state = game.result(state, move)
+            print(f"The algorithm chooses {move}.")
+
+        game.display(state)
+
+def computer_computer(game, state):
+    while not game.terminal_test(state):
+        player = state.to_move
+        print(f"\n{player}'s turn.")
+
+        if player == 'X':
+            move = alpha_beta_IDS(state, game, d=6)
+        else:
+            move = alpha_beta_IDS(state, game, d=6)
+
+        state = game.result(state, move)
+        game.display(state)
+
+def human_human(game, state):
     while not game.terminal_test(state):
         player = state.to_move
         print(f"\n{player}'s turn.")
         move = eval(input("Enter your move as (x, y): "))
         state = game.result(state, move)
         game.display(state)
+
+
+if __name__ == "__main__":
+    user_input = input("Please enter a single number to represent the size of your board in terms of squares, such as '3' for a 3x3 board or '4' for a 4x4 board.\n")
+    board_size = int(user_input)
+    game = NxNTicTacToe(board_size, board_size, board_size)
+    state = game.initial
+
+    game_type = input("Please enter 'a' to play against another player, 'b' to play against alpha beta algorithm, or 'c' to watch the algorithm play against itself.\n" )
+    print("\nStart game!\n")
+    game.display(state)
+    if game_type=="a":
+        human_human(game,state)
+    elif game_type=="b":
+        human_computer(game, state)
+    elif game_type=="c":
+        computer_computer(game, state)
+    else:
+        print("Invalid input")    
 
     print("\nGame over.")
     if state.utility == 1:

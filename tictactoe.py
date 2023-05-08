@@ -51,10 +51,10 @@ class NxNTicTacToe(Game):
     the form of a list of (x, y) positions, and a board, in the form of
     a dict of {(x, y): Player} entries, where Player is 'X' or 'O'."""
 
-    def __init__(self, h, v, k):
+    def __init__(self, h, v):
         self.h = h
         self.v = v
-        self.k = k
+        self.k = 3
         moves = [(x, y) for x in range(1, h + 1)
                  for y in range(1, v + 1)]
         self.initial = GameState(to_move='X', utility=0, board={}, moves=moves)
@@ -173,15 +173,19 @@ def human_human(game, state):
     while not game.terminal_test(state):
         player = state.to_move
         print(f"\n{player}'s turn.")
-        move = eval(input("Enter your move as (x, y): "))
-        state = game.result(state, move)
+        move_input = input("Enter your move as (x, y): ")
+        if(check_input(move_input,board_size)):
+            move = eval(move_input)
+            state = game.result(state, move)
+        else:
+            print("Invalid input!\n")
         game.display(state)
 
 
 if __name__ == "__main__":
     user_input = input("Please enter a single number to represent the size of your board in terms of squares, such as '3' for a 3x3 board or '4' for a 4x4 board.\n")
     board_size = int(user_input)
-    game = NxNTicTacToe(board_size, board_size, board_size)
+    game = NxNTicTacToe(board_size, board_size)
     state = game.initial
 
     game_type = input("Please enter 'a' to play against another player, 'b' to play against alpha beta algorithm, or 'c' to watch the algorithm play against itself.\n" )

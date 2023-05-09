@@ -1,5 +1,8 @@
 from games import *
 import time
+import matplotlib.pyplot as plt
+import numpy as np
+import random
 
 def alpha_beta_IDS(state, game, d=10, eval_fn=None):
     start = time.time()
@@ -99,6 +102,7 @@ class NxNTicTacToe(Game):
         else:
             return 0
 
+
     def k_in_row(self, board, move, player, delta_x_y):
         """Return true if there is a line through move on board for player."""
         (delta_x, delta_y) = delta_x_y
@@ -163,25 +167,47 @@ def human_computer(game, state):
     else:
         print("It's a tie!")
         
+
+
 def computer_computer(game, state):
-    while not game.terminal_test(state):
-        player = state.to_move
-        print(f"\n{player}'s turn.")
+    results = {'X': 0, 'O': 0, 'Tie': 0}
 
-        if player == 'X':
-            move = alpha_beta_IDS(state, game, d=6)
+    for _ in range(10):
+        state = game.initial  # Reset the game state
+        print("New game")
+        while not game.terminal_test(state):
+            player = state.to_move
+            print(f"\n{player}'s turn.")
+            if player == 'X':
+                #depth = 10
+                #move = alpha_beta_IDS(state, game, d=depth)
+                moves = game.actions(state)
+                move = random.choice(moves)
+            else:
+                # Generate a random move
+                #moves = game.actions(state)
+                move = alpha_beta_IDS(state, game, d=10)
+
+            state = game.result(state, move)
+            game.display(state)
+
+        if state.utility == 1:
+            results['X'] += 1
+        elif state.utility == -1:
+            results['O'] += 1
         else:
-            move = alpha_beta_IDS(state, game, d=6)
+            results['Tie'] += 1
 
-        state = game.result(state, move)
-        game.display(state)
-    print("\nGame over.")
-    if state.utility == 1:
-        print("X wins!")
-    elif state.utility == -1:
-        print("O wins!")
-    else:
-        print("It's a tie!")
+    # Print the results
+    print("\nResults:")
+    print(f"X Wins: {results['X']}")
+    print(f"O Wins: {results['O']}")
+    print(f"Ties: {results['Tie']}")
+    return results
+
+
+
+
 
 def human_human(game, state):
     while not game.terminal_test(state):
@@ -217,7 +243,17 @@ if __name__ == "__main__":
     elif game_type=="b":
         human_computer(game, state)
     elif game_type=="c":
-        computer_computer(game, state)
+        results = computer_computer(game, state)
+        # Plot the results
+        labels = ['X Wins', 'O Wins', 'Ties']
+        values = [results['X'], results['O'], results['Tie']]
+
+        plt.bar(labels, values)
+        plt.xlabel('Results')
+        plt.ylabel('Count')
+        plt.title('Computer vs. Computer Results')
+        plt.show()
+        
     else:
         print("Invalid input")    
 

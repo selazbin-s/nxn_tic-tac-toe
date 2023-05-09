@@ -171,10 +171,14 @@ def human_computer(game, state):
 
 def computer_computer(game, state):
     results = {'X': 0, 'O': 0, 'Tie': 0}
+    total_time = 0
+    total_branching = 0
 
-    for _ in range(10):
+    for _ in range(100):
         state = game.initial  # Reset the game state
-        print("New game")
+        
+        start_time = time.time()
+        branching_count = 0
         while not game.terminal_test(state):
             player = state.to_move
             print(f"\n{player}'s turn.")
@@ -183,13 +187,24 @@ def computer_computer(game, state):
                 #move = alpha_beta_IDS(state, game, d=depth)
                 moves = game.actions(state)
                 move = random.choice(moves)
+                branching_count += len(moves)  # Count the number of possible moves
             else:
                 # Generate a random move
                 #moves = game.actions(state)
-                move = alpha_beta_IDS(state, game, d=10)
+                depth = 10
+                eval_fn = None
+                move = alpha_beta_IDS(state, game, depth, eval_fn)
 
             state = game.result(state, move)
             game.display(state)
+        
+        print("New game")
+        
+        game_time = time.time() - start_time
+        total_time += game_time
+        
+        total_branching += branching_count
+        
 
         if state.utility == 1:
             results['X'] += 1
@@ -197,12 +212,15 @@ def computer_computer(game, state):
             results['O'] += 1
         else:
             results['Tie'] += 1
-
+    average_branching = total_branching / 10  # Calculate the average branching factor
+    
     # Print the results
     print("\nResults:")
     print(f"X Wins: {results['X']}")
     print(f"O Wins: {results['O']}")
     print(f"Ties: {results['Tie']}")
+    print(f"Total time taken: {total_time:.2f} seconds")
+    print(f"Average Branching Factor: {average_branching:.2f}")
     return results
 
 

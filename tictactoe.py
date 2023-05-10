@@ -5,7 +5,7 @@ import numpy as np
 import random
 import sys
 
-def alpha_beta_IDS(state, game, d=10, eval_fn=None):
+def alpha_beta_IDS(state, game, depth, eval_fn=None):
     start = time.time()
     player = game.to_move(state)
 
@@ -14,6 +14,7 @@ def alpha_beta_IDS(state, game, d=10, eval_fn=None):
         def max_value(state, alpha, beta, depth):
             if game.terminal_test(state):
                 return game.utility(state, player)
+            if time.time() - start > 10 or 0 >= depth: return eval_fn(state)
             v = -np.inf
             for a in game.actions(state):
                 v = max(v, min_value(game.result(state, a), alpha, beta, depth - 1))
@@ -25,6 +26,7 @@ def alpha_beta_IDS(state, game, d=10, eval_fn=None):
         def min_value(state, alpha, beta, depth):
             if game.terminal_test(state):
                 return game.utility(state, player)
+            if time.time() - start > 10 or 0 >= depth: return eval_fn(state)
             v = np.inf
             for a in game.actions(state):
                 v = min(v, max_value(game.result(state, a), alpha, beta, depth - 1))
@@ -32,47 +34,51 @@ def alpha_beta_IDS(state, game, d=10, eval_fn=None):
                     return v
                 beta = min(beta, v)
             return v
-
-        if time.time() - start > 10 or 0 >= depth: return eval_fn(state)
+        
         return max_value(state, alpha, beta, depth) if state.to_move == 'X' else min_value(state, alpha, beta, depth)
 
     best_action = None
-    for depth in range(1, d):
+    for d in range(1, depth):
         if time.time() - start > 10: break
         eval_fn = eval_fn or (lambda state: game.utility(state, player))
         best_score = -np.inf
         beta = np.inf
         for a in game.actions(state):
-            v = alphabeta(game.result(state, a), best_score, beta, depth)
+            v = alphabeta(game.result(state, a), best_score, beta, d)
             if v > best_score:
                 best_score = v
                 best_action = a
     return best_action
 
-def minmax_decision(state, game):
+def minmax_decision(state, game, depth, eval_fn = None):
     """Given a state in a game, calculate the best move by searching
     forward all the way to the terminal states."""
 
     player = state.to_move
 
-    def max_value(state):
+    def max_value(state, depth):
         if game.terminal_test(state):
             return game.utility(state, player)
+        if depth <= 0: return eval_fn(state)
         v = -np.inf
         for a in game.actions(state):
-            v = max(v, min_value(game.result(state, a)))
+            v = max(v, min_value(game.result(state, a), depth - 1))
         return v
 
-    def min_value(state):
+    def min_value(state, depth):
         if game.terminal_test(state):
             return game.utility(state, player)
+        if depth <= 0: return eval_fn(state)
         v = np.inf
         for a in game.actions(state):
-            v = min(v, max_value(game.result(state, a)))
+            v = min(v, max_value(game.result(state, a), depth - 1))
         return v
 
     # Body of minmax_decision:
-    return max(game.actions(state), key=lambda a: min_value(game.result(state, a)))
+    for d in range(1, depth):
+        eval_fn = eval_fn or (lambda state: game.utility(state, player))
+        v = max(game.actions(state), key=lambda a: min_value(game.result(state, a), d))
+    return v
 
 
 
@@ -213,7 +219,7 @@ def computer_computer(game, state, algo_type):
             player = state.to_move
             print(f"\n{player}'s turn.")
             if player == 'X':
-                #depth = 10
+                #depth = 5
                 #move = alpha_beta_IDS(state, game, d=depth)
                 moves = game.actions(state)
                 move = random.choice(moves)
@@ -226,7 +232,7 @@ def computer_computer(game, state, algo_type):
                 if algo_type=='a':
                     move = alpha_beta_IDS(state, game, depth, eval_fn)
                 else:
-                    move = minmax_decision(state, game)
+                    move = minmax_decision(state, game, depth = 5)
 
             state = game.result(state, move)
             game.display(state)

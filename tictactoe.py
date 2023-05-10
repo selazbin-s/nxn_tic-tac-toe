@@ -3,6 +3,7 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 import random
+import sys
 
 def alpha_beta_IDS(state, game, d=10, eval_fn=None):
     start = time.time()
@@ -125,18 +126,15 @@ def check_input(user_input, board_size):
     # Split the input into a and b strings
     a_str, b_str = user_input.split(",")
 
-    # Check if a and b are digits
     if not a_str.isdigit() or not b_str.isdigit():
         return False
 
-    # Convert the a and b strings to integers
     a, b = int(a_str), int(b_str)
 
     # Check if either a or b is greater than the board size
     if a > board_size or b > board_size:
         return False
 
-    # Return the a and b as a tuple
     return True
 
 def human_computer(game, state):
@@ -248,8 +246,15 @@ def human_human(game, state):
 
 
 if __name__ == "__main__":
-    user_input = input("Please enter a single number to represent the size of your board in terms of squares, such as '3' for a 3x3 board or '4' for a 4x4 board.\n")
-    board_size = int(user_input)
+    user_input = input("Please enter a single number greater than 3 to represent the size of your board in terms of squares, such as '3' for a 3x3 board or '4' for a 4x4 board.\n")
+    if user_input.isdigit():
+        board_size = int(user_input)
+    else:
+        print("Invalid input")
+        sys.exit(0)
+    if board_size<3 or board_size>9:
+        print("Invalid input")
+        sys.exit(0)
     game = NxNTicTacToe(board_size, board_size)
     state = game.initial
 
@@ -274,11 +279,3 @@ if __name__ == "__main__":
         
     else:
         print("Invalid input")    
-
-    #print("\nGame over.")
-    #if state.utility == 1:
-    #    print("X wins!")
-    #elif state.utility == -1:
-    #    print("O wins!")
-    #else:
-    #    print("It's a tie!")

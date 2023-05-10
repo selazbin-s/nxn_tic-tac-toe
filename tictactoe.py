@@ -49,6 +49,33 @@ def alpha_beta_IDS(state, game, d=10, eval_fn=None):
                 best_action = a
     return best_action
 
+def minmax_decision(state, game):
+    """Given a state in a game, calculate the best move by searching
+    forward all the way to the terminal states."""
+
+    player = state.to_move
+
+    def max_value(state):
+        if game.terminal_test(state):
+            return game.utility(state, player)
+        v = -np.inf
+        for a in game.actions(state):
+            v = max(v, min_value(game.result(state, a)))
+        return v
+
+    def min_value(state):
+        if game.terminal_test(state):
+            return game.utility(state, player)
+        v = np.inf
+        for a in game.actions(state):
+            v = min(v, max_value(game.result(state, a)))
+        return v
+
+    # Body of minmax_decision:
+    return max(game.actions(state), key=lambda a: min_value(game.result(state, a)))
+
+
+
 class NxNTicTacToe(Game):
     """Play TicTacToe on an h x v board, with Max (first player) playing 'X'.
     A state has the player to move, a cached utility, a list of moves in
@@ -138,6 +165,8 @@ def check_input(user_input, board_size):
     return True
 
 def human_computer(game, state):
+    print("\nStart game!\n")
+    game.display(state)
     while not game.terminal_test(state):
         player = state.to_move
         print(f"\n{player}'s turn.")
@@ -167,12 +196,15 @@ def human_computer(game, state):
         
 
 
-def computer_computer(game, state):
+def computer_computer(game, state, algo_type):
+    print("\nStart game!\n")
+    game.display(state)
+    
     results = {'X': 0, 'O': 0, 'Tie': 0}
     total_time = 0
     total_branching = 0
 
-    for _ in range(100):
+    for _ in range(3):
         state = game.initial  # Reset the game state
         
         start_time = time.time()
@@ -191,7 +223,10 @@ def computer_computer(game, state):
                 #moves = game.actions(state)
                 depth = 10
                 eval_fn = None
-                move = alpha_beta_IDS(state, game, depth, eval_fn)
+                if algo_type=='a':
+                    move = alpha_beta_IDS(state, game, depth, eval_fn)
+                else:
+                    move = minmax_decision(state, game)
 
             state = game.result(state, move)
             game.display(state)
@@ -222,10 +257,9 @@ def computer_computer(game, state):
     return results
 
 
-
-
-
 def human_human(game, state):
+    print("\nStart game!\n")
+    game.display(state)
     while not game.terminal_test(state):
         player = state.to_move
         print(f"\n{player}'s turn.")
@@ -259,23 +293,26 @@ if __name__ == "__main__":
     state = game.initial
 
     game_type = input("Please enter 'a' to play against another player, 'b' to play against alpha beta algorithm, or 'c' to watch the algorithm play against itself.\n" )
-    print("\nStart game!\n")
-    game.display(state)
     if game_type=="a":
         human_human(game,state)
     elif game_type=="b":
         human_computer(game, state)
     elif game_type=="c":
-        results = computer_computer(game, state)
-        # Plot the results
-        labels = ['X Wins', 'O Wins', 'Ties']
-        values = [results['X'], results['O'], results['Tie']]
+        algo_type=input("Please enter 'a' for alpha beta iterative deepening algorithm or 'b' for min max algorithm.\n")
+        if algo_type == 'a' or algo_type == 'b':
+            results = computer_computer(game, state, algo_type)
+            # Plot the results
+            labels = ['X Wins', 'O Wins', 'Ties']
+            values = [results['X'], results['O'], results['Tie']]
 
-        plt.bar(labels, values)
-        plt.xlabel('Results')
-        plt.ylabel('Count')
-        plt.title('Computer vs. Computer Results')
-        plt.show()
+            plt.bar(labels, values)
+            plt.xlabel('Results')
+            plt.ylabel('Count')
+            plt.title('Computer vs. Computer Results')
+            plt.show()
         
     else:
-        print("Invalid input")    
+        print("Invalid input")
+        sys.exit(0)
+
+    print("Thanks for playing!\n")

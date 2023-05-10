@@ -171,8 +171,14 @@ def check_input(user_input, board_size):
     return True
 
 def human_computer(game, state):
-    print("\nStart game!\n")
-    game.display(state)
+    # Variables for time complexity and branching factor calculation
+    start_time = time.time()
+    move_count = 0
+
+    # Lists for storing data for plotting
+    move_counts = []
+    times = []
+
     while not game.terminal_test(state):
         player = state.to_move
         print(f"\n{player}'s turn.")
@@ -187,18 +193,52 @@ def human_computer(game, state):
         else:  # Algorithm's turn
             depth = 5  # Set the search depth
             eval_fn = None  # Use the default evaluation function
+            
+            # Measure the branching factor
+            move_count += 1
+
+            # Measure the algorithm's execution time
+            algorithm_start_time = time.time()
             move = alpha_beta_IDS(state, game, depth, eval_fn)
+            algorithm_end_time = time.time()
+            move_duration = algorithm_end_time - algorithm_start_time
+
+            # Store data for plotting
+            move_counts.append(move_count)
+            times.append(move_duration)
+
             state = game.result(state, move)
             print(f"The algorithm chooses {move}.")
 
         game.display(state)
+
     print("\nGame over.")
+
     if state.utility == 1:
         print("X wins!")
     elif state.utility == -1:
         print("O wins!")
     else:
         print("It's a tie!")
+
+    # Plot the graph
+    #plt.plot(move_counts, times)
+    #plt.xlabel('Move count')
+    #plt.ylabel('Time (seconds)')
+    #plt.title('Time Complexity')
+    #plt.show()
+
+    # Calculate and print the branching factor
+    if len(move_counts) > 1:
+        branching_factor = move_counts[-1] / sum(move_counts[:-1])
+        print(f"Branching factor: {branching_factor:.2f}")
+
+    # Calculate and print the total time complexity
+    total_time = time.time() - start_time
+    print(f"Total time complexity: {total_time:.2f} seconds")
+
+        
+
         
 
 
@@ -210,7 +250,7 @@ def computer_computer(game, state, algo_type):
     total_time = 0
     total_branching = 0
 
-    for _ in range(3):
+    for _ in range(100):
         state = game.initial  # Reset the game state
         
         start_time = time.time()
